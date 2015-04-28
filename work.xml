@@ -1,0 +1,32 @@
+<workflow-app name="oozieTest" xmlns="uri:oozie:workflow:0.1">
+ <start to="create-test-flag"/>
+ <action name="create-test-flag">
+   <ssh xmlns="uri:oozie:ssh-action:0.1">
+    <host>${sshUser}</host>
+    <command>/tmp/create-test-flag.sh</command>
+    <args>hdfs://d-3zkyk02.target.com:8020/common/personalization/ready</args>
+    <args>/etc/security/keytabs/SVBIGRED.keytab</args>
+    <args>SVBIGRED@BIGRED.TARGET.COM</args>
+    <capture-output/>
+   </ssh>
+    <ok to="end"/>
+    <error to="fail"/>
+ </action>
+ <action name="fail">
+   <email xmlns="uri:oozie:email-action:0.1">
+   <to>${supportEmail}</to>
+   <subject>oozieTest job failed - "TODO - add env"</subject>
+   <body>
+           Error day: ${wf:actionData('create-test-flag')['RunDate']}
+           Error Message - ${wf:actionData('create-test-flag')['finalReason']}
+           Error report Location - ${wf:actionData('create-test-flag')['errorReportLocation']}
+   </body>
+   </email>
+   <ok to="kill"/>
+   <error to="kill"/>
+ </action>
+<kill name="kill">
+      <message>Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+</kill>
+<end name="end"/>
+</workflow-app>
